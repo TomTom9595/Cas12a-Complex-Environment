@@ -121,7 +121,7 @@ def plot_group_last(results, last_col,
     plt.show()
 
 if __name__ == '__main__':
-    csv_file = 'averaged_curves.csv'
+    csv_file = 'in_vivo_LowGC2_PurPyr17C.csv'
     if not os.path.exists(csv_file):
         raise FileNotFoundError(f"CSV file '{csv_file}' not found.")
     results, last_col = read_and_extract_last(csv_file)
