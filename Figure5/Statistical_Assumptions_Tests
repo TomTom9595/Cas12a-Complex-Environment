@@ -1,0 +1,75 @@
+import pandas as pd
+from scipy.stats import shapiro, levene
+
+def load_endpoints(csv_path):
+    """
+    Load CSV and extract endpoint value for each file.
+    Expects columns: 'file','group','time_0',...,'time_N'.
+    Returns DataFrame with 'group' and 'endpoint'.
+    """
+    df = pd.read_csv(csv_path)
+    time_cols = sorted(
+        [c for c in df.columns if c.startswith('time_')],
+        key=lambda c: int(c.split('_')[1])
+    )
+    last_col = time_cols[-1]
+    endpoints = df[['group', last_col]].rename(columns={last_col: 'endpoint'})
+    return endpoints
+
+def test_normality(df_vals):
+    """
+    Perform Shapiro–Wilk test on endpoint values per group.
+    Returns dict: {group: (W, p_value)}.
+    """
+    results = {}
+    for grp in df_vals['group'].unique():
+        data = df_vals.loc[df_vals['group'] == grp, 'endpoint']
+        W_stat, p_val = shapiro(data)
+        results[grp] = (W_stat, p_val)
+    return results
+
+def test_variance(df_vals):
+    """
+    Perform Levene's test for equal variances between two groups.
+    Returns (W, p_value).
+    """
+    groups = df_vals['group'].unique()
+    data1 = df_vals.loc[df_vals['group'] == groups[0], 'endpoint']
+    data2 = df_vals.loc[df_vals['group'] == groups[1], 'endpoint']
+    W_stat, p_val = levene(data1, data2)
+    return W_stat, p_val
+
+def main(csv_path='in_vivo_LowGC2_PurPyr17C.csv'):
+    # Load endpoint values
+    df_vals = load_endpoints(csv_path)
+
+    # Normality tests
+    norm_results = test_normality(df_vals)
+    print("Shapiro–Wilk Normality Test per Group:")
+    for grp, (W, p) in norm_results.items():
+        print(f"  {grp}: W = {W:.4f}, p = {p:.4f}")
+
+    # Variance test
+    lev_W, lev_p = test_variance(df_vals)
+    print(f"\nLevene's Test for Equal Variances: W = {lev_W:.4f}, p = {lev_p:.4f}\n")
+
+    # Conclusion about t-test suitability
+    normal_ok = all(p > 0.05 for _, p in norm_results.values())
+    variance_ok = (lev_p > 0.05)
+
+    if normal_ok and variance_ok:
+        print("Conclusion: Assumptions met. A two-sided Student's t-test on endpoint values is appropriate.")
+    else:
+        print("Conclusion: Assumptions not met.")
+        if not normal_ok:
+            print(" - Normality assumption violated in at least one group.")
+        if not variance_ok:
+            print(" - Homogeneity of variances violated.")
+
+if __name__ == '__main__':
+    # You can pass a different filename as argument
+    import argparse
+    parser = argparse.ArgumentParser(description='Assumption checks and Mann–Whitney U test on endpoint values')
+    parser.add_argument('csv_file', nargs='?', default='in_vivo_LowGC2_PurPyr17C.csv', help='Path to the CSV file')
+    args = parser.parse_args()
+    main(args.csv_file)
