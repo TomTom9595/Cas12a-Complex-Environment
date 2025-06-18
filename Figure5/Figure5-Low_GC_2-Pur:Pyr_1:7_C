@@ -75,48 +75,8 @@ def plot_group_last(results, last_col,
     ax.set_xticklabels(groups, rotation=0, ha='center')
     ax.tick_params(axis='x', pad=20)
     ax.set_ylabel(f"Intensity at 17h (n.u)")
-
-    # — Give room for sig‐bar
-    max_val = df_vals['last_value'].max()
-    ax.set_ylim(0, max_val * 1.4)
     
     ax.yaxis.get_offset_text().set_visible(False)
-
-    # — t-test + significance bar if exactly two groups
-    if len(groups) == 2:
-        d1, d2 = [
-            df_vals.loc[df_vals['group'] == g, 'last_value']
-            for g in groups
-        ]
-        t_stat, p_val = ttest_ind(d1, d2, equal_var=True)
-
-        # determine stars
-        if   p_val < 0.001: sig = '***'
-        elif p_val < 0.01:  sig = '**'
-        elif p_val < 0.05:  sig = '*'
-        else:               sig = 'ns'
-
-        # draw bar + stars
-        y  = max_val * 1.1
-        h  = max_val * 0.05
-        ax.plot(
-            [x[0], x[0], x[1], x[1]],
-            [y, y+h, y+h, y],
-            lw=8, c='black'
-        )
-        ax.text(
-            (x[0] + x[1]) / 2, y + h,
-            sig,
-            ha='center', va='bottom',
-            fontsize=100,
-            fontweight='bold'
-        )
-
-        # print results
-        print(f"Student's t-test: t = {t_stat:.3f}, p = {p_val:.5f} ({sig})")
-        print("→ Significant difference." if p_val < 0.05 else "→ No significant difference.")
-    else:
-        print("T-test not performed: need exactly two groups.")
 
     plt.show()
 
