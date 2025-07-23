@@ -39,7 +39,7 @@ def test_variance(df_vals):
     W_stat, p_val = levene(data1, data2)
     return W_stat, p_val
 
-def main(csv_path='in_vivo_LowGC2_PurPyr17C.csv'):
+def main(csv_path='in_vivo_gRNA14_gRNA7.csv'):
     # Load endpoint values
     df_vals = load_endpoints(csv_path)
 
@@ -70,6 +70,6 @@ if __name__ == '__main__':
     # You can pass a different filename as argument
     import argparse
     parser = argparse.ArgumentParser(description='Assumption checks and Mann–Whitney U test on endpoint values')
-    parser.add_argument('csv_file', nargs='?', default='in_vivo_LowGC2_PurPyr17C.csv', help='Path to the CSV file')
+    parser.add_argument('csv_file', nargs='?', default='in_vivo_gRNA14_gRNA7.csv', help='Path to the CSV file')
     args = parser.parse_args()
     main(args.csv_file)
